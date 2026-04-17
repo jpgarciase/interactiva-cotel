@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantalla Innovación - Cotel</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background-color: #58585A; /* Gris Oscuro Cotel */
+            color: white; 
+            margin: 0; 
+            padding: 0;
+            overflow: hidden; 
+            font-family: 'Montserrat', sans-serif; 
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* Encabezado Principal */
+        header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            text-align: center;
+            padding: 40px 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4), transparent);
+            z-index: 10;
+        }
+
+        header p {
+            margin: 0;
+            font-weight: 400;
+            font-size: 0.9rem;
+            letter-spacing: 5px;
+            color: #ccc;
+            text-transform: uppercase;
+        }
+
+        header h1 {
+            margin: 10px 0 0;
+            font-size: 3rem;
+            font-weight: 900;
+            color: #FFED00; /* Amarillo Cotel */
+            text-shadow: 3px 3px 15px rgba(0,0,0,0.6);
+        }
+
+        /* Contenedor de la Nube */
+        #contenedor { 
+            width: 100%; 
+            height: 100%; 
+            position: relative; 
+            z-index: 5;
+        }
+
+        /* Estilo de cada palabra */
+        .palabra {
+            position: absolute;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            text-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <p>INTEGRACIÓN AVANZADA</p>
+        <h1>Define en una palabra qué entiendes por Innovación</h1>
+    </header>
+
+    <div id="contenedor"></div>
+
+    <script>
+        // Configuración de tu proyecto "Interactiva Cotel"
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSma3iR_QDuZzmotbchFMzLtvHfe1l--U",
+            authDomain: "interactiva-cotel.firebaseapp.com",
+            projectId: "interactiva-cotel",
+            storageBucket: "interactiva-cotel.firebasestorage.app",
+            messagingSenderId: "33652295311",
+            appId: "1:33652295311:web:a079754cd45c5e430d12fa",
+            databaseURL: "https://interactiva-cotel-default-rtdb.firebaseio.com"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Colores oficiales de Cotel (amarillos)
+        const coloresCotel = ['#FFED00', '#FFDD00', '#FFD500', '#FABB00'];
+        const registroPalabras = {};
+
+        // 1. ESCUCHAR NUEVAS PALABRAS
+        db.ref('nube').on('child_added', (snapshot) => {
+            const texto = snapshot.val().toLowerCase().trim();
+            
+            if (registroPalabras[texto]) {
+                // Si la palabra ya existe, la hacemos crecer
+                registroPalabras[texto].size += 15; // Aumenta 15px por cada voto
+                const el = registroPalabras[texto].elemento;
+                el.style.fontSize = registroPalabras[texto].size + 'px';
+                
+                // Efecto visual momentáneo de brillo al crecer
+                el.style.filter = "brightness(1.6)";
+                setTimeout(() => el.style.filter = "brightness(1)", 400);
+            } else {
+                // Si la palabra es nueva, la creamos
+                crearPalabraVisual(texto);
+            }
+        });
+
+        // 2. ESCUCHAR REINICIO (Cuando limpies desde admin.html)
+        db.ref('nube').on('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                document.getElementById('contenedor').innerHTML = '';
+                // Limpiar el registro interno
+                for (let p in registroPalabras) delete registroPalabras[p];
+            }
+        });
+
+        function crearPalabraVisual(txt) {
+            const el = document.createElement('span');
+            el.innerText = txt;
+            el.className = 'palabra';
+            
+            const sizeInicial = 30;
+            registroPalabras[txt] = { elemento: el, size: sizeInicial };
+
+            // Posicionamiento aleatorio (evitando el encabezado y los bordes)
+            const posX = Math.floor(Math.random() * 65 + 15); // 15% a 80% ancho
+            const posY = Math.floor(Math.random() * 55 + 30); // 30% a 85% alto
+            
+            el.style.left = posX + '%';
+            el.style.top = posY + '%';
+            el.style.fontSize = sizeInicial + 'px';
+            
+            // Asignar color aleatorio de la paleta Cotel
+            el.style.color = coloresCotel[Math.floor(Math.random() * coloresCotel.length)];
+
+            document.getElementById('contenedor').appendChild(el);
+        }
+    </script>
+</body>
+</html>

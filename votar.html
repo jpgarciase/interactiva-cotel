@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votar - Cotel Innovación</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --gris-cotel: #58585A;
+            --amarillo-bright: #FFED00;
+            --amarillo-medium: #FFDD00;
+            --amarillo-dark: #FABB00;
+        }
+
+        body { 
+            font-family: 'Montserrat', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            background-color: var(--gris-cotel); /* Fondo gris corporativo */
+            color: white;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .logo-text {
+            font-weight: 400;
+            font-size: 0.7rem;
+            letter-spacing: 4px;
+            color: var(--amarillo-bright);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        h2 { 
+            font-weight: 900;
+            font-size: 1.6rem;
+            margin-bottom: 25px;
+            line-height: 1.2;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            border: 2px solid transparent; 
+            border-radius: 12px; 
+            box-sizing: border-box; 
+            font-size: 18px; 
+            font-family: 'Montserrat', sans-serif;
+            text-align: center;
+            background: white;
+            color: var(--gris-cotel);
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--amarillo-bright);
+            box-shadow: 0 0 15px rgba(255, 237, 0, 0.3);
+        }
+
+        button { 
+            background-color: var(--amarillo-medium); 
+            color: var(--gris-cotel); 
+            border: none; 
+            padding: 15px 30px; 
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            font-weight: 900;
+            width: 100%; 
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        button:hover {
+            background-color: var(--amarillo-bright);
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        #mensaje-exito {
+            display: none;
+            margin-top: 20px;
+            color: var(--amarillo-bright);
+            font-weight: 700;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="logo-text">INTEGRACIÓN AVANZADA</div>
+        <h2>¿Qué palabra define para ti la Innovación?</h2>
+        
+        <div class="input-group">
+            <input type="text" id="palabra" placeholder="Escribe aquí..." maxlength="15" autocomplete="off">
+        </div>
+        
+        <button onclick="enviar()">Enviar a Cotel</button>
+        
+        <div id="mensaje-exito">¡Recibido! Mira la pantalla.</div>
+    </div>
+
+    <script>
+        // --- TU CONFIGURACIÓN DE FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSma3iR_QDuZzmotbchFMzLtvHfe1l--U",
+            authDomain: "interactiva-cotel.firebaseapp.com",
+            projectId: "interactiva-cotel",
+            storageBucket: "interactiva-cotel.firebasestorage.app",
+            messagingSenderId: "33652295311",
+            appId: "1:33652295311:web:a079754cd45c5e430d12fa",
+            databaseURL: "https://interactiva-cotel-default-rtdb.firebaseio.com"
+        };
+        // ------------------------------------
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function enviar() {
+            const input = document.getElementById('palabra');
+            const mensaje = document.getElementById('mensaje-exito');
+            const txt = input.value.trim().toLowerCase();
+            
+            if(txt) {
+                db.ref('nube').push(txt);
+                input.value = '';
+                
+                // Feedback visual sin alerts molestos
+                mensaje.style.display = 'block';
+                setTimeout(() => {
+                    mensaje.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Permitir enviar con la tecla Enter
+        document.getElementById("palabra").addEventListener("keyup", function(event) {
+            if (event.key === "Enter") {
+                enviar();
+            }
+        });
+    </script>
+</body>
+</html>
