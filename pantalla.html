@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Innovación - Cotel Interactiva</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body { 
+            background-color: #58585A; /* Gris Oscuro Cotel */
+            color: white; 
+            margin: 0; 
+            padding: 0;
+            overflow: hidden; 
+            font-family: 'Montserrat', sans-serif; 
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* --- ENCABEZADO --- */
+        header {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            text-align: center;
+            padding: 50px 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+            z-index: 10;
+        }
+
+        .brand-tag {
+            font-weight: 400;
+            font-size: 1rem;
+            letter-spacing: 8px;
+            color: #FFFFFF;
+            opacity: 0.8;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            display: block;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #FFFFFF;
+            line-height: 1.2;
+            text-shadow: 3px 3px 15px rgba(0,0,0,0.6);
+        }
+
+        .highlight {
+            color: #FFED00;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* --- CONTENEDOR DE LA NUBE --- */
+        #contenedor { 
+            width: 100%; 
+            height: 100%; 
+            position: relative; 
+            z-index: 5;
+        }
+
+        .palabra {
+            position: absolute;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 900;
+            text-transform: uppercase;
+            white-space: nowrap;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* --- CONTADOR DE VOTOS (Nuevo) --- */
+        #contador-votos {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 237, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+        }
+
+        .num-votos {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #FFED00;
+            line-height: 1;
+        }
+
+        .txt-votos {
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: white;
+            line-height: 1.2;
+        }
+
+        /* --- CONTENEDOR QR --- */
+        #qr-container {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #qr-code { width: 140px; height: 140px; }
+        .qr-text { color: #58585A; font-size: 0.75rem; margin: 8px 0 0; font-weight: 900; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <span class="brand-tag">Integración Avanzada</span>
+        <h1>Define en una palabra qué entiendes por <span class="highlight">Innovación</span></h1>
+    </header>
+
+    <div id="contenedor"></div>
+
+    <div id="contador-votos">
+        <div id="votos-numero" class="num-votos">0</div>
+        <div class="txt-votos">Palabras<br>recibidas</div>
+    </div>
+
+    <div id="qr-container">
+        <img id="qr-code" src="" alt="QR para votar">
+        <p class="qr-text">¡ESCANEA Y PARTICIPA!</p>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCSma3iR_QDuZzmotbchFMzLtvHfe1l--U",
+            authDomain: "interactiva-cotel.firebaseapp.com",
+            projectId: "interactiva-cotel",
+            storageBucket: "interactiva-cotel.firebasestorage.app",
+            messagingSenderId: "33652295311",
+            appId: "1:33652295311:web:a079754cd45c5e430d12fa",
+            databaseURL: "https://interactiva-cotel-default-rtdb.firebaseio.com"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // QR Dinámico
+        const urlVotacion = "https://jpgarciase.github.io/interactiva-cotel/votar.html";
+        document.getElementById('qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(urlVotacion)}`;
+
+        // Lógica de Nube y Contador
+        const coloresCotel = ['#FFED00', '#FFDD00', '#FFD500', '#FABB00'];
+        const registroPalabras = {};
+        let totalVotos = 0;
+
+        db.ref('nube').on('child_added', (snapshot) => {
+            const texto = snapshot.val().toLowerCase().trim();
+            
+            // Actualizar contador
+            totalVotos++;
+            const counterEl = document.getElementById('votos-numero');
+            counterEl.innerText = totalVotos;
+            
+            // Animación pequeña al contador
+            counterEl.style.transform = "scale(1.2)";
+            setTimeout(() => counterEl.style.transform = "scale(1)", 200);
+
+            if (registroPalabras[texto]) {
+                registroPalabras[texto].size += 15;
+                const el = registroPalabras[texto].elemento;
+                el.style.fontSize = registroPalabras[texto].size + 'px';
+            } else {
+                crearPalabraVisual(texto);
+            }
+        });
+
+        // Escuchar reinicio
+        db.ref('nube').on('value', (snapshot) => {
+            if (!snapshot.exists()) {
+                document.getElementById('contenedor').innerHTML = '';
+                totalVotos = 0;
+                document.getElementById('votos-numero').innerText = "0";
+                for (let p in registroPalabras) delete registroPalabras[p];
+            }
+        });
+
+        function crearPalabraVisual(txt) {
+            const el = document.createElement('span');
+            el.innerText = txt;
+            el.className = 'palabra';
+            const sizeInicial = 32;
+            registroPalabras[txt] = { elemento: el, size: sizeInicial };
+
+            const posX = Math.floor(Math.random() * 60 + 20); 
+            const posY = Math.floor(Math.random() * 50 + 35); 
+            
+            el.style.left = posX + '%';
+            el.style.top = posY + '%';
+            el.style.fontSize = sizeInicial + 'px';
+            el.style.color = coloresCotel[Math.floor(Math.random() * coloresCotel.length)];
+
+            document.getElementById('contenedor').appendChild(el);
+        }
+    </script>
+</body>
+</html>
